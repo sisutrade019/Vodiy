@@ -1,0 +1,30 @@
+name: Build HISOBCHI VDP777 APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - run: unzip -q -o HISOBCHI-VDP777-android.zip
+      - name: Use index.html from the repository root
+        run: |
+          for f in index.html manifest.json icon-192.png icon-512.png; do
+            if [ -f "$f" ]; then cp -f "$f" HISOBCHI-VDP777/app/src/main/assets/; fi
+          done
+          grep -o "v1.4 · 17.11.2026" HISOBCHI-VDP777/app/src/main/assets/index.html || echo "WARNING: index.html is not the latest version"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: 8.7
+      - run: gradle assembleDebug
+        working-directory: HISOBCHI-VDP777
+      - run: cp HISOBCHI-VDP777/app/build/outputs/apk/debug/app-debug.apk HISOBCHI-VDP777.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: HISOBCHI-VDP777-apk
+          path: HISOBCHI-VDP777.apk
